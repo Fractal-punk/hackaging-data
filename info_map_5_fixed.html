@@ -1,0 +1,2087 @@
+<!doctype html>
+
+<html lang="ru">
+
+<head>
+
+  <meta charset="utf-8"/>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+  <title>Longevity Race Map — карта научной гонки за долголетие</title>
+
+  <style>
+
+    :root{--bg:#0b1220;--text:#e6eefc;--muted:#a9b6d3;--shadow:0 10px 30px rgba(0,0,0,.35);--radius:16px;--font:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+
+    html,body{height:100%}
+
+    body{margin:0;font-family:var(--font);background:radial-gradient(1200px 900px at 30% 10%,#14244a 0%,var(--bg) 55%,#070b14 100%);color:var(--text);overflow:hidden}
+
+    #app{height:100%;display:grid;grid-template-rows:auto 1fr;gap:10px;padding:10px;box-sizing:border-box}
+
+    header{background:linear-gradient(180deg,rgba(16,26,46,.95),rgba(16,26,46,.70));border:1px solid rgba(35,50,85,.7);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px 12px;display:grid;grid-template-columns:1.35fr 4.65fr;gap:10px;align-items:center;min-height:unset}
+
+    .title h1{margin:0 0 4px 0;font-size:16px;font-weight:800;letter-spacing:.2px}
+
+    .title .sub{margin:0;font-size:12px;color:var(--muted);line-height:1.35}
+
+    .controls{display:grid;grid-template-columns:1.15fr 1.15fr 1.15fr 2.25fr 1.05fr;gap:8px;align-items:center}
+
+    .control{background:rgba(10,16,30,.35);border:1px solid rgba(35,50,85,.55);border-radius:14px;padding:8px 10px;min-height:54px}
+
+    .control label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;user-select:none}
+
+    select,button,input[type="range"]{width:100%;box-sizing:border-box;font:inherit;color:var(--text);background:rgba(15,25,48,.9);border:1px solid rgba(35,50,85,.8);border-radius:12px;padding:7px 9px;outline:none}
+
+    input[type="range"]{padding:8px 0;background:transparent;border:none}
+
+    .rangeRow{display:flex;gap:10px;align-items:center}
+
+    .yearBadge{min-width:62px;text-align:center;font-weight:900;border-radius:12px;padding:7px 9px;background:rgba(15,25,48,.9);border:1px solid rgba(35,50,85,.8);user-select:none}
+
+    .btnRow{display:flex;gap:8px;margin-top:8px}
+
+    button{cursor:pointer;transition:transform .05s ease,border-color .2s ease,background .2s ease;user-select:none;font-weight:800}
+
+    button:active{transform:scale(.99)}
+
+    button.primary{border-color:rgba(102,227,255,.8);background:linear-gradient(180deg,rgba(102,227,255,.25),rgba(102,227,255,.12))}
+
+    button.ghost{background:rgba(15,25,48,.6)}
+
+    main{height:100%;display:grid;grid-template-columns:1.65fr 1fr;grid-template-rows:1fr;gap:12px;min-height:0}
+
+    .panel{background:linear-gradient(180deg,rgba(16,26,46,.90),rgba(16,26,46,.55));border:1px solid rgba(35,50,85,.7);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;min-height:0;position:relative}
+
+    .panelHeader{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(35,50,85,.55);background:rgba(10,16,30,.25)}
+
+    .panelHeader h2{margin:0;font-size:13px;font-weight:900;letter-spacing:.2px}
+
+    .panelHeader .hint{font-size:11px;color:var(--muted);user-select:none}
+
+    .panelBody{position:absolute;inset:46px 0 0 0;min-height:0}
+
+    svg{display:block;width:100%;height:100%}
+
+    .tooltip{position:fixed;pointer-events:none;background:rgba(10,16,30,.92);border:1px solid rgba(102,227,255,.25);padding:10px 10px;border-radius:14px;box-shadow:var(--shadow);font-size:12px;color:var(--text);max-width:420px;line-height:1.35;z-index:50;opacity:0}
+
+    .tooltip .tTitle{font-weight:950;margin-bottom:6px}
+
+    .tooltip .row{display:flex;justify-content:space-between;gap:10px;color:var(--muted)}
+
+    .tooltip .row span:last-child{color:var(--text);font-weight:900;text-align:right}
+
+    .legend{position:absolute;right:10px;bottom:10px;background:rgba(10,16,30,.45);border:1px solid rgba(35,50,85,.55);border-radius:14px;padding:10px 10px;display:grid;gap:8px;width:260px;user-select:none}
+
+    .legendTitle{font-size:11px;color:var(--muted)}
+
+    .legendBar{height:10px;border-radius:999px;border:1px solid rgba(35,50,85,.8);background:linear-gradient(90deg,#1a2a4a 0%,#27406b 20%,#36628f 40%,#4c8fb0 60%,#5fc6d6 80%,#b4fff1 100%);opacity:.95}
+
+    .legendTicks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+
+    .axis text{fill:rgba(230,238,252,.75);font-size:10px}
+
+    .axis path,.axis line{stroke:rgba(35,50,85,.7)}
+
+    .gridline line{stroke:rgba(35,50,85,.45)}
+
+    .gridline path{stroke:none}
+
+    .country{stroke:rgba(15,25,48,.85);stroke-width:.6;cursor:pointer}
+
+    .country.selected{stroke:rgba(102,227,255,.95);stroke-width:1.6}
+
+    .country:hover{stroke:rgba(102,227,255,.8);stroke-width:1.2}
+
+    .eventDot{opacity:.95;stroke:rgba(11,18,32,.95);stroke-width:1.2;filter:url(#softGlow)}
+
+    .eventHalo{fill:none;stroke-width:2.2;opacity:.35;filter:url(#softGlow)}
+
+    .eventLabel{font-size:11px;fill:rgba(230,238,252,.92);paint-order:stroke;stroke:rgba(11,18,32,.65);stroke-width:4px;stroke-linecap:round;stroke-linejoin:round;user-select:none}
+
+    .eventLabelBg{fill:rgba(10,16,30,.62);stroke:rgba(102,227,255,.18);stroke-width:1}
+
+    .growthLeader{stroke:rgba(230,238,252,.32);stroke-width:1.15;stroke-dasharray:3 3;pointer-events:none;opacity:.95}
+
+    .growthCircle{stroke-width:1.8;filter:url(#strongGlow)}
+
+    .growthRank{font-size:12px;font-weight:950;fill:rgba(230,238,252,.95);paint-order:stroke;stroke:rgba(11,18,32,.75);stroke-width:4px;user-select:none;pointer-events:none}
+
+    .bar{fill:rgba(102,227,255,.55);stroke:rgba(102,227,255,.30);stroke-width:1;cursor:pointer}
+
+    .bar.selected{fill:rgba(112,255,184,.60);stroke:rgba(112,255,184,.30)}
+
+    .barValue{font-size:10px;fill:rgba(230,238,252,.9);user-select:none}
+
+    .line{fill:none;stroke:rgba(180,255,241,.92);stroke-width:2.1}
+
+    .dot{fill:rgba(180,255,241,.92);stroke:rgba(15,25,48,.9);stroke-width:1}
+
+    .yearMarker{stroke:rgba(255,93,122,.95);stroke-width:1.6;stroke-dasharray:4 4;opacity:.9}
+
+    .statusOverlay{position:absolute;left:12px;top:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(35,50,85,.7);background:rgba(10,16,30,.55);color:var(--muted);font-size:12px;user-select:none;max-width:520px}
+
+    .statusOverlay strong{color:var(--text)}
+
+    @media (max-width:1100px){header{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr 1fr}.controls .control:nth-child(4){grid-column:1/-1}}
+
+    @media (max-width:680px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.controls{grid-template-columns:1fr 1fr}.controls .control:nth-child(4){grid-column:1/-1}}
+
+  </style>
+
+</head>
+
+<body>
+
+<div id="app">
+
+  <header>
+
+    <div class="title">
+
+      <h1>Карта научной гонки за долголетие</h1>
+
+      <p class="sub">Визуализация концентрации денег, статей и патентов по миру за 2010-2024.</p>
+
+    </div>
+
+    <div class="controls">
+
+      <div class="control">
+
+        <label for="metricSelect">Метрика</label>
+
+        <select id="metricSelect">
+
+          <option value="composite">Композит</option>
+
+          <option value="publications">Публикации</option>
+
+          <option value="patents">Патенты</option>
+
+          <option value="investments">Инвестиции</option>
+
+        </select>
+
+      </div>
+
+      <div class="control">
+
+        <label for="scaleSelect">Масштаб</label>
+
+        <select id="scaleSelect">
+
+          <option value="normalized" selected>Нормализованный</option>
+
+          <option value="absolute">Абсолютный</option>
+
+        </select>
+
+      </div>
+
+      <div class="control">
+
+        <label for="modeSelect">Режим</label>
+
+        <select id="modeSelect">
+
+          <option value="inline" selected>События</option>
+
+          <option value="growth">Прирост (Top-10 пузырьки)</option>
+
+        </select>
+
+      </div>
+
+      <div class="control">
+
+        <label>Год (2010–2024)</label>
+
+        <div class="rangeRow">
+
+          <input id="yearSlider" type="range" min="2010" max="2024" step="1" value="2018"/>
+
+          <div id="yearBadge" class="yearBadge">2018</div>
+
+        </div>
+
+        <div class="btnRow">
+
+          <button id="btnPrev" class="ghost" title="Год назад">◀</button>
+
+          <button id="btnPlay" class="primary" title="Старт/пауза">▶︎</button>
+
+          <button id="btnNext" class="ghost" title="Год вперёд">▶</button>
+
+          <button id="btnClear" class="ghost" title="Сброс фильтра страны">Сброс</button>
+
+        </div>
+
+      </div>
+
+      <div class="control">
+
+        <label for="speedSelect">Скорость (сек/год)</label>
+
+        <select id="speedSelect">
+
+          <option value="300">0.3</option>
+
+          <option value="500">0.5</option>
+
+          <option value="900" selected>0.9</option>
+
+          <option value="1500">1.5</option>
+
+          <option value="2000">2.0</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <main>
+
+    <section id="mapPanel" class="panel">
+
+      <div class="panelHeader">
+
+        <h2>1) Хроно-географическая карта</h2>
+
+        <div class="hint">Наведение — детали, клик — фильтр страны</div>
+
+      </div>
+
+      <div class="panelBody">
+
+        <svg id="mapSvg" aria-label="World map"></svg>
+
+        <div id="mapStatus" class="statusOverlay">
+
+          <strong>Загрузка карты…</strong><br/>Если открыли файл напрямую (file://) и карта не загрузится — откройте через локальный сервер (python -m http.server).
+
+        </div>
+
+        <div class="legend" aria-hidden="true">
+
+          <div class="legendTitle" id="legendTitle">Интенсивность</div>
+
+          <div class="legendBar"></div>
+
+          <div class="legendTicks"><span id="legendMin">0</span><span id="legendMax">max</span></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="chartPanel" class="panel">
+
+      <div class="panelHeader">
+
+        <h2>2) Рейтинг и динамика</h2>
+
+        <div class="hint">Top-10 + ряд 2010–2024</div>
+
+      </div>
+
+      <div class="panelBody">
+
+        <svg id="chartSvg" aria-label="Ranking and trend"></svg>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <div id="tooltip" class="tooltip"></div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script type="module">
+
+(function(){
+
+"use strict";
+const ACTIVITY_DATA=[
+
+{"country":"United States of America","year":2010,"publications":5207,"patents":217,"investments":60962},
+
+{"country":"China","year":2010,"publications":1489,"patents":167,"investments":54533},
+
+{"country":"United Kingdom","year":2010,"publications":1383,"patents":3,"investments":1834},
+
+{"country":"Germany","year":2010,"publications":977,"patents":6,"investments":1777},
+
+{"country":"Italy","year":2010,"publications":780,"patents":0,"investments":205},
+
+{"country":"Japan","year":2010,"publications":769,"patents":25,"investments":2579},
+
+{"country":"Canada","year":2010,"publications":711,"patents":16,"investments":2111},
+
+{"country":"Australia","year":2010,"publications":610,"patents":4,"investments":736},
+
+{"country":"France","year":2010,"publications":577,"patents":2,"investments":1075},
+
+{"country":"Spain","year":2010,"publications":473,"patents":2,"investments":673},
+
+{"country":"United States of America","year":2011,"publications":5251,"patents":197,"investments":87518},
+
+{"country":"China","year":2011,"publications":1749,"patents":116,"investments":57232},
+
+{"country":"United Kingdom","year":2011,"publications":1456,"patents":3,"investments":2187},
+
+{"country":"Germany","year":2011,"publications":1005,"patents":4,"investments":1952},
+
+{"country":"Japan","year":2011,"publications":880,"patents":28,"investments":3107},
+
+{"country":"Italy","year":2011,"publications":795,"patents":0,"investments":297},
+
+{"country":"Canada","year":2011,"publications":738,"patents":18,"investments":2814},
+
+{"country":"Australia","year":2011,"publications":703,"patents":21,"investments":493},
+
+{"country":"France","year":2011,"publications":625,"patents":1,"investments":1128},
+
+{"country":"Spain","year":2011,"publications":558,"patents":2,"investments":804},
+
+{"country":"United States of America","year":2012,"publications":5684,"patents":184,"investments":79352},
+
+{"country":"China","year":2012,"publications":1815,"patents":254,"investments":64000},
+
+{"country":"United Kingdom","year":2012,"publications":1649,"patents":6,"investments":2078},
+
+{"country":"Germany","year":2012,"publications":1144,"patents":0,"investments":1486},
+
+{"country":"Japan","year":2012,"publications":907,"patents":32,"investments":2569},
+
+{"country":"Italy","year":2012,"publications":868,"patents":0,"investments":260},
+
+{"country":"Canada","year":2012,"publications":848,"patents":21,"investments":0},
+
+{"country":"Australia","year":2012,"publications":764,"patents":24,"investments":663},
+
+{"country":"France","year":2012,"publications":689,"patents":1,"investments":930},
+
+{"country":"Netherlands","year":2012,"publications":634,"patents":0,"investments":405},
+
+{"country":"United States of America","year":2013,"publications":6343,"patents":186,"investments":80292},
+
+{"country":"China","year":2013,"publications":2193,"patents":404,"investments":80000},
+
+{"country":"United Kingdom","year":2013,"publications":1803,"patents":4,"investments":1766},
+
+{"country":"Germany","year":2013,"publications":1244,"patents":0,"investments":1837},
+
+{"country":"Italy","year":2013,"publications":1036,"patents":0,"investments":207},
+
+{"country":"Canada","year":2013,"publications":996,"patents":24,"investments":3154},
+
+{"country":"Japan","year":2013,"publications":907,"patents":27,"investments":3726},
+
+{"country":"Australia","year":2013,"publications":868,"patents":16,"investments":506},
+
+{"country":"France","year":2013,"publications":744,"patents":0,"investments":1303},
+
+{"country":"India","year":2013,"publications":720,"patents":0,"investments":0},
+
+{"country":"United States of America","year":2014,"publications":6603,"patents":232,"investments":113708},
+
+{"country":"China","year":2014,"publications":2290,"patents":605,"investments":90000},
+
+{"country":"United Kingdom","year":2014,"publications":1993,"patents":3,"investments":2412},
+
+{"country":"Germany","year":2014,"publications":1244,"patents":0,"investments":1790},
+
+{"country":"Italy","year":2014,"publications":1106,"patents":0,"investments":139},
+
+{"country":"Canada","year":2014,"publications":1001,"patents":23,"investments":3277},
+
+{"country":"Australia","year":2014,"publications":975,"patents":32,"investments":532},
+
+{"country":"Japan","year":2014,"publications":922,"patents":26,"investments":2211},
+
+{"country":"India","year":2014,"publications":847,"patents":0,"investments":0},
+
+{"country":"France","year":2014,"publications":797,"patents":0,"investments":1067},
+
+{"country":"United States of America","year":2015,"publications":7318,"patents":200,"investments":125687},
+
+{"country":"United Kingdom","year":2015,"publications":2042,"patents":5,"investments":2968},
+
+{"country":"China","year":2015,"publications":1997,"patents":986,"investments":120000},
+
+{"country":"Germany","year":2015,"publications":1377,"patents":0,"investments":2060},
+
+{"country":"Italy","year":2015,"publications":1143,"patents":0,"investments":168},
+
+{"country":"Canada","year":2015,"publications":1096,"patents":25,"investments":3231},
+
+{"country":"Australia","year":2015,"publications":1029,"patents":23,"investments":577},
+
+{"country":"Japan","year":2015,"publications":979,"patents":23,"investments":1110},
+
+{"country":"India","year":2015,"publications":888,"patents":5,"investments":0},
+
+{"country":"France","year":2015,"publications":877,"patents":0,"investments":1250},
+
+{"country":"United States of America","year":2016,"publications":7590,"patents":218,"investments":123992},
+
+{"country":"United Kingdom","year":2016,"publications":2116,"patents":4,"investments":1969},
+
+{"country":"China","year":2016,"publications":2008,"patents":953,"investments":199000},
+
+{"country":"Germany","year":2016,"publications":1381,"patents":0,"investments":3033},
+
+{"country":"India","year":2016,"publications":1243,"patents":0,"investments":0},
+
+{"country":"Italy","year":2016,"publications":1229,"patents":0,"investments":171},
+
+{"country":"Canada","year":2016,"publications":1176,"patents":29,"investments":4542},
+
+{"country":"Japan","year":2016,"publications":1049,"patents":22,"investments":1368},
+
+{"country":"Australia","year":2016,"publications":1039,"patents":17,"investments":332},
+
+{"country":"France","year":2016,"publications":890,"patents":0,"investments":1315},
+
+{"country":"United States of America","year":2017,"publications":8066,"patents":274,"investments":142115},
+
+{"country":"China","year":2017,"publications":2391,"patents":1000,"investments":0},
+
+{"country":"United Kingdom","year":2017,"publications":2338,"patents":3,"investments":4642},
+
+{"country":"Germany","year":2017,"publications":1476,"patents":0,"investments":3101},
+
+{"country":"India","year":2017,"publications":1337,"patents":0,"investments":0},
+
+{"country":"Canada","year":2017,"publications":1320,"patents":28,"investments":5548},
+
+{"country":"Italy","year":2017,"publications":1247,"patents":0,"investments":199},
+
+{"country":"Australia","year":2017,"publications":1151,"patents":21,"investments":710},
+
+{"country":"Japan","year":2017,"publications":1099,"patents":29,"investments":1679},
+
+{"country":"Brazil","year":2017,"publications":956,"patents":1,"investments":0},
+
+{"country":"United States of America","year":2018,"publications":8634,"patents":270,"investments":236612},
+
+{"country":"China","year":2018,"publications":2786,"patents":1020,"investments":90000},
+
+{"country":"United Kingdom","year":2018,"publications":2536,"patents":3,"investments":5154},
+
+{"country":"Germany","year":2018,"publications":1579,"patents":0,"investments":3488},
+
+{"country":"India","year":2018,"publications":1427,"patents":0,"investments":0},
+
+{"country":"Italy","year":2018,"publications":1393,"patents":0,"investments":399},
+
+{"country":"Canada","year":2018,"publications":1390,"patents":26,"investments":5364},
+
+{"country":"Australia","year":2018,"publications":1197,"patents":21,"investments":858},
+
+{"country":"Japan","year":2018,"publications":1186,"patents":21,"investments":2286},
+
+{"country":"Brazil","year":2018,"publications":1021,"patents":0,"investments":0},
+
+{"country":"United States of America","year":2019,"publications":9706,"patents":285,"investments":233382},
+
+{"country":"China","year":2019,"publications":3487,"patents":1061,"investments":37000},
+
+{"country":"United Kingdom","year":2019,"publications":2912,"patents":1,"investments":6760},
+
+{"country":"Germany","year":2019,"publications":1813,"patents":0,"investments":4698},
+
+{"country":"Italy","year":2019,"publications":1547,"patents":0,"investments":432},
+
+{"country":"Canada","year":2019,"publications":1509,"patents":35,"investments":7785},
+
+{"country":"India","year":2019,"publications":1499,"patents":0,"investments":0},
+
+{"country":"Australia","year":2019,"publications":1420,"patents":27,"investments":975},
+
+{"country":"Japan","year":2019,"publications":1278,"patents":19,"investments":2503},
+
+{"country":"Spain","year":2019,"publications":1207,"patents":1,"investments":1261},
+
+{"country":"United States of America","year":2020,"publications":11059,"patents":322,"investments":260438},
+
+{"country":"China","year":2020,"publications":4324,"patents":521,"investments":337000},
+
+{"country":"United Kingdom","year":2020,"publications":3309,"patents":8,"investments":6239},
+
+{"country":"Germany","year":2020,"publications":2112,"patents":0,"investments":4243},
+
+{"country":"India","year":2020,"publications":1971,"patents":0,"investments":100000},
+
+{"country":"Italy","year":2020,"publications":1918,"patents":0,"investments":789},
+
+{"country":"Canada","year":2020,"publications":1766,"patents":41,"investments":5968},
+
+{"country":"Australia","year":2020,"publications":1599,"patents":40,"investments":70000},
+
+{"country":"Japan","year":2020,"publications":1536,"patents":27,"investments":2074},
+
+{"country":"Spain","year":2020,"publications":1486,"patents":1,"investments":1685},
+
+{"country":"United States of America","year":2021,"publications":10709,"patents":300,"investments":533372},
+
+{"country":"China","year":2021,"publications":4827,"patents":669,"investments":397000},
+
+{"country":"United Kingdom","year":2021,"publications":3437,"patents":9,"investments":13319},
+
+{"country":"India","year":2021,"publications":2466,"patents":0,"investments":100000},
+
+{"country":"Germany","year":2021,"publications":2353,"patents":0,"investments":9744},
+
+{"country":"Italy","year":2021,"publications":1987,"patents":0,"investments":1032},
+
+{"country":"Canada","year":2021,"publications":1845,"patents":45,"investments":19109},
+
+{"country":"Australia","year":2021,"publications":1579,"patents":38,"investments":70000},
+
+{"country":"Japan","year":2021,"publications":1550,"patents":22,"investments":3031},
+
+{"country":"Spain","year":2021,"publications":1547,"patents":2,"investments":3376},
+
+{"country":"United States of America","year":2022,"publications":10668,"patents":335,"investments":380300},
+
+{"country":"China","year":2022,"publications":6188,"patents":440,"investments":345000},
+
+{"country":"United Kingdom","year":2022,"publications":3347,"patents":1,"investments":7548},
+
+{"country":"India","year":2022,"publications":2662,"patents":0,"investments":70000},
+
+{"country":"Germany","year":2022,"publications":2454,"patents":0,"investments":7049},
+
+{"country":"Italy","year":2022,"publications":1955,"patents":0,"investments":1474},
+
+{"country":"Canada","year":2022,"publications":1774,"patents":27,"investments":14375},
+
+{"country":"Japan","year":2022,"publications":1528,"patents":27,"investments":2449},
+
+{"country":"Australia","year":2022,"publications":1525,"patents":30,"investments":50000},
+
+{"country":"Spain","year":2022,"publications":1489,"patents":0,"investments":1886},
+
+{"country":"United States of America","year":2023,"publications":11702,"patents":263,"investments":258199},
+
+{"country":"China","year":2023,"publications":6259,"patents":389,"investments":300000},
+
+{"country":"United Kingdom","year":2023,"publications":3459,"patents":5,"investments":7751},
+
+{"country":"India","year":2023,"publications":3008,"patents":0,"investments":80000},
+
+{"country":"Germany","year":2023,"publications":2477,"patents":0,"investments":5145},
+
+{"country":"Italy","year":2023,"publications":2041,"patents":0,"investments":1390},
+
+{"country":"Canada","year":2023,"publications":1904,"patents":30,"investments":9889},
+
+{"country":"Australia","year":2023,"publications":1630,"patents":39,"investments":0},
+
+{"country":"Japan","year":2023,"publications":1613,"patents":29,"investments":1900},
+
+{"country":"Spain","year":2023,"publications":1582,"patents":1,"investments":1611},
+
+{"country":"United States of America","year":2024,"publications":9825,"patents":346,"investments":312914},
+
+{"country":"China","year":2024,"publications":6635,"patents":348,"investments":300000},
+
+{"country":"United Kingdom","year":2024,"publications":3007,"patents":5,"investments":12601},
+
+{"country":"India","year":2024,"publications":2647,"patents":0,"investments":40000},
+
+{"country":"Germany","year":2024,"publications":2133,"patents":0,"investments":6385},
+
+{"country":"Italy","year":2024,"publications":1852,"patents":0,"investments":1438},
+
+{"country":"Canada","year":2024,"publications":1650,"patents":4,"investments":8954},
+
+{"country":"Australia","year":2024,"publications":1454,"patents":53,"investments":10000},
+
+{"country":"Japan","year":2024,"publications":1428,"patents":32,"investments":1900},
+
+{"country":"Spain","year":2024,"publications":1391,"patents":1,"investments":1923}
+
+];
+const EVENTS_DATA=[
+
+{id:"EV2010_US_MET",year:2010,country:"United States of America",lat:40.5540,lon:-74.4600,type:"breakthrough",title:"Метформин продлевает жизнь C. elegans (PLOS ONE)",note:"Метформин: удлинение жизни у нематод"},
+
+{id:"EV2010_RU_RAPA",year:2010,country:"Russia",lat:59.9311,lon:30.3609,type:"breakthrough",title:"Рапамицин увеличивает lifespan и подавляет опухоли у мышей (AJP Pathology)",note:"Рапамицин: +lifespan и анти-онко эффект (мыши)"},
+
+{id:"EV2011_US_SEN_CLEAR",year:2011,country:"United States of America",lat:44.0121,lon:-92.4802,type:"breakthrough",title:"Удаление p16Ink4a+ сенесцентных клеток задерживает возрастные патологии (Nature)",note:"Сенесцентные клетки: генетическое удаление улучшает healthspan"},
+
+{id:"EV2012_JP_IPS_NOBEL",year:2012,country:"Japan",lat:35.0116,lon:135.7681,type:"breakthrough",title:"Нобелевская премия за перепрограммирование клеток (iPS)",note:"iPS: ключевой инструмент rejuvenation/моделирования старения"},
+
+{id:"EV2012_IL_SIRT6",year:2012,country:"Israel",lat:32.0853,lon:34.7818,type:"breakthrough",title:"SIRT6: сверхэкспрессия продлевает жизнь самцов мышей (Nature)",note:"SIRT6: увеличение lifespan у млекопитающих через sirtuin"},
+
+{id:"EV2013_ES_HALLMARKS",year:2013,country:"Spain",lat:40.4168,lon:-3.7038,type:"breakthrough",title:"Публикация «The Hallmarks of Aging» (Cell)",note:"Hallmarks: каркас современной геронтологии и таргетирования старения"},
+
+{id:"EV2013_UK_MET_MICROBIOME",year:2013,country:"United Kingdom",lat:51.5074,lon:-0.1278,type:"breakthrough",title:"Метформин замедляет старение C. elegans через микробиом/фолатный обмен (Cell)",note:"Метформин: связь долголетия и микробиоты"},
+
+{id:"EV2013_US_CALICO",year:2013,country:"United States of America",lat:37.3861,lon:-122.0839,type:"company",title:"Запуск Calico (Alphabet) для биологии старения",note:"Calico: вход Big Tech в longevity R&D"},
+
+{id:"EV2014_US_ABBVIE_CALICO",year:2014,country:"United States of America",lat:37.6547,lon:-122.4077,type:"investment",title:"AbbVie и Calico объявляют крупную коллаборацию по age-related diseases",note:"AbbVie–Calico: одна из крупнейших longevity-R&D сделок"},
+
+{id:"EV2014_US_YOUNG_BLOOD",year:2014,country:"United States of America",lat:37.7749,lon:-122.4194,type:"breakthrough",title:"«Young blood» улучшает когнитивные функции у старых мышей (Nature Medicine)",note:"Парабиоз/плазма: импульс к системной rejuvenation тематике"},
+
+{id:"EV2014_US_RAPA_DOSE",year:2014,country:"United States of America",lat:42.2808,lon:-83.7430,type:"breakthrough",title:"Эффект рапамицина на lifespan дозо- и полозависим (Aging Cell)",note:"Рапамицин: калибровка доз/пола для продления жизни"},
+
+{id:"EV2014_US_HLI_LAUNCH",year:2014,country:"United States of America",lat:32.7157,lon:-117.1611,type:"company",title:"Запуск Human Longevity, Inc. (HLI) — коммерческий longevity-игрок на genomics/stem cells",note:"HLI: индустриализация «омикс»-подхода к healthspan"},
+
+{id:"EV2015_US_SENOLYTICS_DQ",year:2015,country:"United States of America",lat:44.0121,lon:-92.4802,type:"breakthrough",title:"Первые сенолитики: дасатиниб+кверцетин селективно убивают сенесцентные клетки (Aging Cell)",note:"Сенолитики: старт класса препаратов для senescence-targeting"},
+
+{id:"EV2015_US_TAME_FDA",year:2015,country:"United States of America",lat:39.0030,lon:-77.0405,type:"policy",title:"Обсуждение с FDA концепции geroscience-трайл TAME (метформин)",note:"TAME: попытка клинически «таргетировать старение»"},
+
+{id:"EV2015_US_CALICO_BUCK",year:2015,country:"United States of America",lat:38.1074,lon:-122.5697,type:"investment",title:"Calico и Buck Institute объявляют партнёрство по биологии старения",note:"Calico×Buck: укрепление научной инфраструктуры longevity"},
+
+{id:"EV2015_US_CALICO_UCSF",year:2015,country:"United States of America",lat:37.7749,lon:-122.4194,type:"investment",title:"Calico лицензирует технологии UCSF (lab Peter Walter) для исследований старения",note:"Calico×UCSF: трансфер академических технологий в longevity R&D"},
+
+{id:"EV2015_US_HLI_NUCLEUS",year:2015,country:"United States of America",lat:32.7157,lon:-117.1611,type:"company",title:"HLI запускает Health Nucleus — платформу deep phenotyping/genomics",note:"Health Nucleus: data-driven профилактика и биомаркеры"},
+
+{id:"EV2016_US_PARTIAL_REPROG",year:2016,country:"United States of America",lat:32.8328,lon:-117.2713,type:"breakthrough",title:"Частичное перепрограммирование in vivo снижает возрастные маркеры (Cell)",note:"Yamanaka factors: partial reprogramming без тератом"},
+
+{id:"EV2016_US_NR_BIOAVAIL",year:2016,country:"United States of America",lat:41.6611,lon:-91.5302,type:"breakthrough",title:"NR показан как перорально биоavailable у людей (Nature Communications)",note:"NR/NAD+: переход от биохимии к клинической трансляции"},
+
+{id:"EV2016_US_UNITY_SERIESB",year:2016,country:"United States of America",lat:37.6547,lon:-122.4077,type:"investment",title:"Unity Biotechnology привлекает $116M Series B для senescence-targeting программ",note:"Unity: крупное финансирование под сенолитику/сеноморфику"},
+
+{id:"EV2017_US_NRPT_TRIAL",year:2017,country:"United States of America",lat:40.0150,lon:-105.2705,type:"clinical",title:"NRPT (NR+птеростильбен) повышает NAD+ у пожилых в RCT (Nature Partner Journals)",note:"NAD+: ранние controlled данные по NRPT у людей"},
+
+{id:"EV2018_US_TAME_DESIGN",year:2018,country:"United States of America",lat:40.7128,lon:-74.0060,type:"policy",title:"Публикация рамки geroscience-трайлов и логики TAME (PMC, обзор/консенсус)",note:"Клинические испытания: перевод «биологии старения» в endpoints"},
+
+{id:"EV2020_US_ZOKINVP_PROGERIA",year:2020,country:"United States of America",lat:37.4419,lon:-122.1430,type:"clinical",title:"FDA одобряет lonafarnib (Zokinvy) для прогерии и progeroid laminopathies",note:"Прогерия: первая регистрированная терапия ускоренного старения"},
+
+{id:"EV2021_US_CAMBRIAN_SERIESC",year:2021,country:"United States of America",lat:40.7128,lon:-74.0060,type:"investment",title:"Cambrian Biopharma привлекает $130M Series C для geroscience-пайплайна",note:"Cambrian: портфель anti-aging программ и платформ"},
+
+{id:"EV2021_SA_HEVOLUTION",year:2021,country:"Saudi Arabia",lat:24.7136,lon:46.6753,type:"investment",title:"Hevolution Foundation: запуск инициативы по финансированию research/translation для healthspan",note:"Hevolution: крупная ставка на healthy longevity (порядка $1B/год)"},
+
+{id:"EV2022_US_ALTOS_LAUNCH",year:2022,country:"United States of America",lat:37.7749,lon:-122.4194,type:"company",title:"Altos Labs: запуск mega-funded компании по cellular rejuvenation/reprogramming",note:"Altos: концентрация капитала и кадров вокруг reprogramming"},
+
+{id:"EV2022_US_NEWLIMIT_SEED",year:2022,country:"United States of America",lat:37.7749,lon:-122.4194,type:"investment",title:"NewLimit привлекает seed для эпигенетического перепрограммирования клеток",note:"NewLimit: коммерциализация partial reprogramming"},
+
+{id:"EV2022_NO_NADPARK",year:2022,country:"Norway",lat:59.9139,lon:10.7522,type:"clinical",title:"NADPARK: NR влияет на метаболические сигналы мозга у пациентов с Паркинсоном (Cell Metabolism)",note:"NR: клиническая проверка в нейродегенерации"},
+
+{id:"EV2023_US_NEWLIMIT_SERIESA",year:2023,country:"United States of America",lat:37.7749,lon:-122.4194,type:"investment",title:"NewLimit закрывает Series A для масштабирования epigenetic reprogramming платформы",note:"NewLimit: рост финансирования и команды"},
+
+{id:"EV2023_US_OSK_LIFESPAN_PREPRINT",year:2023,country:"United States of America",lat:32.8328,lon:-117.2713,type:"breakthrough",title:"Предпринт: AAV-экспрессия OSK продлевает жизнь у старых мышей (bioRxiv)",note:"OSK: заявка на lifespan-эффект в возрасте"},
+
+{id:"EV2024_US_OSK_LIFESPAN_PAPER",year:2024,country:"United States of America",lat:32.8328,lon:-117.2713,type:"breakthrough",title:"Публикация: partial reprogramming увеличивает lifespan у старых мышей (Nature Aging)",note:"Partial reprogramming: peer-review подтверждение lifespan-эффекта"},
+/* В исходнике был дубль id EV2013_ES_HALLMARKS — делаю id уникальным, чтобы join по ключу не “съедал” точку */
+
+{id:"EV2013_ES_HALLMARKS_2",year:2013,country:"Spain",lat:43.3619,lon:-5.8494,type:"breakthrough",title:"Cell публикует обзор «The Hallmarks of Aging»",note:"Hallmarks of Aging: базовый фреймворк биогеронтологии"},
+{id:"EV2015_CN_NCGG",year:2015,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Создание National Center for Geriatrics and Gerontology (Пекин)",note:"КНР: институционализация гериатрии на нац. уровне"},
+
+{id:"EV2016_CN_HEALTHY2030",year:2016,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Утверждён план «Healthy China 2030»",note:"КНР: здоровье/здоровое долголетие как нац. приоритет"},
+
+{id:"EV2016_CN_PRECISIONMED",year:2016,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"КНР объявляет масштабную инициативу precision medicine/omics",note:"КНР: гос-масштабирование прецизионной медицины"},
+
+{id:"EV2016_CN_NCRC_GER",year:2016,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Beijing Hospital получает статус National Clinical Research Center (гериатрия)",note:"КНР: нац. клинический R&D по гериатрии"},
+
+{id:"EV2016_SE_NOBEL_AUTOPHAGY",year:2016,country:"Sweden",lat:59.3293,lon:18.0686,type:"breakthrough",title:"Нобель по медицине за аутофагию (Yoshinori Ohsumi)",note:"Аутофагия: ключевой механизм старения/стресс-ответа"},
+
+{id:"EV2017_UK_JUVENESCENCE_FOUNDED",year:2017,country:"United Kingdom",lat:51.5074,lon:-0.1278,type:"company",title:"Основана Juvenescence (UK) — компания, фокус на терапии долголетия",note:"UK: запуск крупного longevity-платформера"},
+
+{id:"EV2018_IM_NAPA_THERAPEUTICS",year:2018,country:"United Kingdom",lat:54.1523,lon:-4.4861,type:"company",title:"Juvenescence + Buck Institute + Insilico формируют Napa Therapeutics",note:"Longevity: NAD-метаболизм → drug discovery (AI + geroscience)"},
+
+{id:"EV2019_CN_HCI_GUIDELINE",year:2019,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Госсовет КНР публикует guideline по реализации Healthy China Initiative",note:"КНР: формализация «Healthy China Initiative (2019–2030)»"},
+
+{id:"EV2019_CN_HCI_DOCS",year:2019,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"КНР выпускает пакет документов по Healthy China Initiative (2019–2030)",note:"КНР: 15 кампаний — профилактика и full-life-cycle health"},
+
+{id:"EV2019_CN_HCI_COMMITTEE",year:2019,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Создана госкомиссия/промо-комитет для Healthy China Initiative (2019–2030)",note:"КНР: координация межведомственного управления здоровьем"},
+
+{id:"EV2019_CN_HCI_CAMPAIGN_START",year:2019,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Старт национальной кампании по построению «Healthy China»",note:"КНР: публичный запуск реализации HCI-повестки"},
+
+{id:"EV2019_CN_ELDERCARE_SERVICES",year:2019,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"Госсовет подчёркивает развитие сервисов ухода за пожилыми (elderly care)",note:"КНР: усиление политики в сторону ageing-care инфраструктуры"},
+
+{id:"EV2020_CH_WHO_DECADE",year:2020,country:"Switzerland",lat:46.2044,lon:6.1432,type:"policy",title:"WHO запускает «Decade of Healthy Ageing (2020–2030)»",note:"Глобальная рамка по healthy ageing и системам ухода"},
+
+{id:"EV2020_JP_NMN_HUMAN",year:2020,country:"Japan",lat:35.6762,lon:139.6503,type:"clinical",title:"Публикуются данные first-in-human по NMN (повышение NAD+ у людей)",note:"Япония: клиническая трансляция NAD+/метаболизма"},
+
+{id:"EV2021_HK_INSILICO_SERIESC",year:2021,country:"China",lat:22.3193,lon:114.1694,type:"investment",title:"Insilico Medicine привлекает ~$225M Series C",note:"Hong Kong: крупный раунд под AI-drug discovery (в т.ч. age-related)"},
+
+{id:"EV2022_HK_INSILICO_SERIESD",year:2022,country:"China",lat:22.3193,lon:114.1694,type:"investment",title:"Insilico Medicine закрывает ~$255M Series D",note:"Hong Kong: масштабирование AI-R&D и клинических программ"},
+
+{id:"EV2022_UK_ALTOS_CAMBRIDGE",year:2022,country:"United Kingdom",lat:52.2053,lon:0.1218,type:"company",title:"Altos Labs разворачивает научное присутствие в Cambridge (UK)",note:"UK: расширение reprogramming/geroscience экосистемы"},
+
+{id:"EV2023_ES_HALLMARKS_EXPAND",year:2023,country:"Spain",lat:43.3619,lon:-5.8494,type:"breakthrough",title:"Cell публикует «Hallmarks of aging: An expanding universe» (обновление)",note:"Hallmarks: расширение до 12 признаков (macroautophagy/воспаление/дисбиоз)"},
+
+{id:"EV2024_CN_OBESITY_GUIDELINES",year:2024,country:"China",lat:39.9042,lon:116.4074,type:"policy",title:"NHC КНР публикует первые нац. клин. рекомендации по ожирению",note:"Ageing-risk: ожирение как драйвер коморбидности и снижения healthspan"}
+
+];
+const COUNTRY_COORDS={"United States of America":[-98.5795,39.8283],"China":[104.1954,35.8617],"United Kingdom":[-2.5,54.5],"Germany":[10.4515,51.1657],"Canada":[-106.3468,56.1304],"Japan":[138.2529,36.2048],"Australia":[133.7751,-25.2744],"France":[2.2137,46.2276],"Italy":[12.5674,41.8719],"Spain":[-3.7492,40.4637],"India":[78.9629,20.5937],"Indonesia":[113.9213,-0.7893]};
+const YEARS=d3.range(2010,2025);
+const state={year:2018,metric:"composite",scale:"normalized",mode:"inline",selectedCountry:null,playing:false,playMs:900};
+const els={
+
+  metricSelect:document.getElementById("metricSelect"),
+
+  scaleSelect:document.getElementById("scaleSelect"),
+
+  modeSelect:document.getElementById("modeSelect"),
+
+  speedSelect:document.getElementById("speedSelect"),
+
+  yearSlider:document.getElementById("yearSlider"),
+
+  yearBadge:document.getElementById("yearBadge"),
+
+  btnPrev:document.getElementById("btnPrev"),
+
+  btnPlay:document.getElementById("btnPlay"),
+
+  btnNext:document.getElementById("btnNext"),
+
+  btnClear:document.getElementById("btnClear"),
+
+  tooltip:d3.select("#tooltip"),
+
+  legendTitle:document.getElementById("legendTitle"),
+
+  legendMin:document.getElementById("legendMin"),
+
+  legendMax:document.getElementById("legendMax"),
+
+  mapStatus:document.getElementById("mapStatus"),
+
+  mapSvg:d3.select("#mapSvg"),
+
+  chartSvg:d3.select("#chartSvg")
+
+};
+let playTimer=null;
+function clampYear(y){return Math.max(2010,Math.min(2024,+y))}
+function metricLabel(metric){
+
+  if(metric==="publications")return"Публикации";
+
+  if(metric==="patents")return"Патенты";
+
+  if(metric==="investments")return"Инвестиции";
+
+  return"Композит";
+
+}
+function showTooltip(html,x,y){els.tooltip.style("opacity",1).html(html).style("left",(x+14)+"px").style("top",(y+14)+"px")}
+
+function hideTooltip(){els.tooltip.style("opacity",0)}
+function formatMoney(n){
+
+  const v=+n||0;
+
+  if(v>=1e12)return d3.format(".2f")(v/1e12)+" T";
+
+  if(v>=1e9)return d3.format(".2f")(v/1e9)+" B";
+
+  if(v>=1e6)return d3.format(".2f")(v/1e6)+" M";
+
+  if(v>=1e3)return d3.format(".2f")(v/1e3)+" K";
+
+  return String(Math.round(v));
+
+}
+function formatMoneySigned(n){
+
+  const v=+n||0;
+
+  const s=v<0?"-":"+";
+
+  return s+formatMoney(Math.abs(v));
+
+}
+function formatCountSigned(n){
+
+  const v=+n||0;
+
+  const s=v<0?"-":"+";
+
+  return s+d3.format(",")(Math.round(Math.abs(v)));
+
+}
+function compositeScoreAbs(row){
+
+  const pub=row.publications||0;
+
+  const pat=row.patents||0;
+
+  const inv=row.investments||0;
+
+  return (pub*1)+(pat*2)+(inv/1e6)*.35;
+
+}
+function makeActivityIndex(rows){
+
+  const byYear=d3.group(rows,d=>+d.year);
+
+  const index=new Map();
+
+  for(const[year,rws]of byYear){
+
+    const m=new Map();
+
+    for(const r of rws){
+
+      m.set(r.country,{
+
+        country:r.country,year:+r.year,
+
+        publications:+r.publications||0,
+
+        patents:+r.patents||0,
+
+        investments:(r.investments==null?0:(+r.investments||0))
+
+      });
+
+    }
+
+    index.set(+year,m);
+
+  }
+
+  return index;
+
+}
+function computeYearTotals(activityIndex){
+
+  const totals=new Map();
+
+  for(const year of YEARS){
+
+    const m=activityIndex.get(year)||new Map();
+
+    let publications=0,patents=0,investments=0,composite=0;
+
+    for(const row of m.values()){
+
+      publications+=row.publications||0;
+
+      patents+=row.patents||0;
+
+      investments+=row.investments||0;
+
+      composite+=compositeScoreAbs(row);
+
+    }
+
+    totals.set(year,{year,publications,patents,investments,composite});
+
+  }
+
+  return totals;
+
+}
+const activityIndex=makeActivityIndex(ACTIVITY_DATA);
+
+const totalsByYear=computeYearTotals(activityIndex);
+function buildCountryBaselines(){
+
+  const byCountry=d3.group(ACTIVITY_DATA,d=>d.country);
+
+  const base=new Map();
+  function firstPositive(sorted,key){
+
+    for(const r of sorted){
+
+      const v=(r[key]==null)?0:(+r[key]||0);
+
+      if(v>0)return{year:+r.year,value:v};
+
+    }
+
+    const r0=sorted[0];
+
+    return{year:+r0.year,value:(r0[key]==null?0:(+r0[key]||0))};
+
+  }
+  for(const[country,rows]of byCountry){
+
+    const sorted=rows.slice().sort((a,b)=>d3.ascending(+a.year,+b.year));
+
+    const row2010=sorted.find(r=>+r.year===2010);
+
+    const defaultBaseRow=row2010||sorted[0];
+    const pubsBase=firstPositive(sorted,"publications");
+
+    const patsBase=firstPositive(sorted,"patents");
+
+    const invBase=firstPositive(sorted,"investments");
+    base.set(country,{
+
+      baseYear:+defaultBaseRow.year,
+
+      publications:pubsBase.value,publicationsBaseYear:pubsBase.year,
+
+      patents:patsBase.value,patentsBaseYear:patsBase.year,
+
+      investments:invBase.value,investmentsBaseYear:invBase.year
+
+    });
+
+  }
+
+  return base;
+
+}
+const baselineByCountry=buildCountryBaselines();
+function normPublications(row){
+
+  const b=baselineByCountry.get(row.country);
+
+  if(!b||!(b.publications>0))return 0;
+
+  return (row.publications||0)/b.publications;
+
+}
+function normPatents(row){
+
+  const b=baselineByCountry.get(row.country);
+
+  if(!b||!(b.patents>0))return 0;
+
+  return (row.patents||0)/b.patents;
+
+}
+function normInvestments(row){
+
+  const b=baselineByCountry.get(row.country);
+
+  if(!b||!(b.investments>0))return 0;
+
+  const v=row.investments||0;
+
+  if(v<=0)return 0;
+
+  return v/b.investments;
+
+}
+function compositeNorm(row){
+
+  const b=baselineByCountry.get(row.country);
+
+  if(!b)return 0;
+
+  let sum=0,w=0;
+
+  if(b.publications>0){sum+=normPublications(row);w+=1}
+
+  if(b.patents>0){sum+=normPatents(row);w+=1}
+
+  if(b.investments>0){sum+=normInvestments(row);w+=1}
+
+  return w>0?(sum/w):0;
+
+}
+function getMetricValue(row,metric){
+
+  if(!row)return 0;
+
+  if(state.scale==="absolute"){
+
+    if(metric==="publications")return row.publications||0;
+
+    if(metric==="patents")return row.patents||0;
+
+    if(metric==="investments")return row.investments||0;
+
+    return compositeScoreAbs(row);
+
+  }
+
+  if(metric==="publications")return normPublications(row);
+
+  if(metric==="patents")return normPatents(row);
+
+  if(metric==="investments")return normInvestments(row);
+
+  return compositeNorm(row);
+
+}
+function getWorldMetricValue(year,metric){
+
+  const tt=totalsByYear.get(year);if(!tt)return 0;
+
+  if(state.scale==="absolute"){
+
+    if(metric==="publications")return tt.publications;
+
+    if(metric==="patents")return tt.patents;
+
+    if(metric==="investments")return tt.investments;
+
+    return tt.composite;
+
+  }
+
+  const base=totalsByYear.get(2010);if(!base)return 0;
+
+  if(metric==="publications")return base.publications>0?(tt.publications/base.publications):0;
+
+  if(metric==="patents")return base.patents>0?(tt.patents/base.patents):0;
+
+  if(metric==="investments"){
+
+    if(!(base.investments>0))return 0;
+
+    return (tt.investments>0)?(tt.investments/base.investments):0;
+
+  }
+
+  const a=base.publications>0?(tt.publications/base.publications):0;
+
+  const b=base.patents>0?(tt.patents/base.patents):0;
+
+  const c=(base.investments>0&&tt.investments>0)?(tt.investments/base.investments):0;
+
+  return (a+b+c)/3;
+
+}
+function clampNormValue(metric,v){
+
+  const x=Math.max(0,+v||0);
+
+  return Math.min(5,x);
+
+}
+/* Формат значения для тултипа (growth) */
+
+function formatValueFor(metric, value){
+
+  const v=+value||0;
+
+  if(state.scale==="normalized") return v.toFixed(2);
+
+  if(metric==="investments") return formatMoney(v);
+
+  if(metric==="publications"||metric==="patents") return d3.format(",")(Math.round(v));
+
+  if(metric==="composite") return d3.format(".2s")(v);
+
+  return d3.format(",")(Math.round(v));
+
+}
+function formatDeltaFor(metric, delta){
+
+  const d=+delta||0;
+
+  if(state.scale==="normalized") return (d>=0?"+":"")+d.toFixed(2);
+
+  if(metric==="investments") return formatMoneySigned(d);
+
+  if(metric==="publications"||metric==="patents") return (d>=0?"+":"")+d3.format(",")(Math.round(d));
+
+  if(metric==="composite") return (d>=0?"+":"")+d3.format(".2s")(Math.abs(d));
+
+  return (d>=0?"+":"")+d3.format(",")(Math.round(d));
+
+}
+/* ===================== MAP ===================== */
+const mapColor=d3.scaleSequential(d3.interpolateYlGnBu);
+let geoCountries=[],projection=null,geoPath=null,rootG=null,countriesG=null,eventsG=null,growthG=null;
+
+let growthLayoutCache=new Map();
+function getSvgSize(svgSel){
+
+  const node=svgSel.node();
+
+  const rect=node.getBoundingClientRect();
+
+  return {w:Math.max(320,rect.width),h:Math.max(240,rect.height)};
+
+}
+async function loadWorldGeoCountries(){
+
+  const topoUrl="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+
+  const namesUrl="https://cdn.jsdelivr.net/npm/world-atlas@2/country-names.tsv";
+
+  const topo=await(await fetch(topoUrl,{cache:"force-cache"})).json();
+
+  const tsvText=await(await fetch(namesUrl,{cache:"force-cache"})).text();
+
+  const nameRows=d3.tsvParse(tsvText);
+
+  const nameById=new Map();
+
+  for(const r of nameRows)nameById.set(String(r.id),r.name);
+
+  const features=topojson.feature(topo,topo.objects.countries).features;
+
+  for(const f of features){
+
+    const id=String(f.id);
+
+    f.properties=f.properties||{};
+
+    f.properties.name=nameById.get(id)||"Unknown";
+
+  }
+
+  return features.filter(f=>f.properties.name!=="Antarctica");
+
+}
+function mapTransform(v,metric){
+
+  const x=Math.max(0,+v||0);
+
+  if(state.scale==="normalized")return Math.sqrt(x);
+
+  if(metric==="investments"||metric==="composite")return Math.log1p(x);
+
+  return Math.log1p(x);
+
+}
+function computeMapDomain(year,metric){
+
+  const m=activityIndex.get(year)||new Map();
+
+  let maxRaw=0,maxT=0;
+  if(state.scale==="normalized"){
+
+    maxRaw=5;
+
+    maxT=mapTransform(5,metric);
+
+    return {minT:0,maxT:maxT||1,minRaw:0,maxRaw:5};
+
+  }
+  for(const row of m.values()){
+
+    const raw=getMetricValue(row,metric);
+
+    if(raw>maxRaw)maxRaw=raw;
+
+    const t=mapTransform(raw,metric);
+
+    if(t>maxT)maxT=t;
+
+  }
+
+  if(!(maxT>0))maxT=1;
+
+  return {minT:0,maxT,minRaw:0,maxRaw:maxRaw||1};
+
+}
+function countryTooltipHtml(countryName){
+
+  const row=(activityIndex.get(state.year)||new Map()).get(countryName);
+
+  const base=baselineByCountry.get(countryName);
+  const pubs=row?row.publications:0;
+
+  const pats=row?row.patents:0;
+
+  const inv=row?row.investments:0;
+  const pubsV=row?getMetricValue(row,"publications"):0;
+
+  const patsV=row?getMetricValue(row,"patents"):0;
+
+  const invV=row?getMetricValue(row,"investments"):0;
+
+  const compV=row?getMetricValue(row,"composite"):0;
+  const baseYear=base?base.baseYear:2010;
+
+  const sel=state.selectedCountry===countryName?" (выбрано)":"";
+  const lineVal=(label,raw,v)=>{
+
+    if(state.scale==="absolute"){
+
+      if(label==="Инвестиции")return`<div class="row"><span>${label}</span><span>${formatMoney(raw)}</span></div>`;
+
+      if(label==="Композит")return`<div class="row"><span>${label}</span><span>${d3.format(",")(Math.round(v))}</span></div>`;
+
+      return`<div class="row"><span>${label}</span><span>${d3.format(",")(raw)}</span></div>`;
+
+    }
+
+    return`<div class="row"><span>${label}</span><span><b>${(+v||0).toFixed(2)}</b></span></div>`;
+
+  };
+  return [
+
+    `<div class="tTitle">${countryName}${sel}</div>`,
+
+    `<div class="row"><span>Год</span><span>${state.year}</span></div>`,
+
+    ...(state.scale==="normalized" ? [`<div class="row"><span>База (пуб/пат/инв)</span><span>${base?(base.publicationsBaseYear+" / "+base.patentsBaseYear+" / "+base.investmentsBaseYear):(baseYear+" = 1")}</span></div>`] : []),
+
+    lineVal("Публикации",pubs,pubsV),
+
+    lineVal("Патенты",pats,patsV),
+
+    lineVal("Инвестиции",inv,invV),
+
+    lineVal("Композит",0,compV)
+
+  ].join("");
+
+}
+function initMap(){
+
+  els.mapSvg.selectAll("*").remove();
+
+  growthLayoutCache=new Map();
+  const defs=els.mapSvg.append("defs");
+  const softGlow=defs.append("filter").attr("id","softGlow").attr("x","-50%").attr("y","-50%").attr("width","200%").attr("height","200%");
+
+  softGlow.append("feGaussianBlur").attr("stdDeviation","2.2").attr("result","b");
+
+  softGlow.append("feMerge").selectAll("feMergeNode").data(["b","SourceGraphic"]).enter().append("feMergeNode").attr("in",d=>d);
+  const strongGlow=defs.append("filter").attr("id","strongGlow").attr("x","-80%").attr("y","-80%").attr("width","260%").attr("height","260%");
+
+  strongGlow.append("feGaussianBlur").attr("stdDeviation","4.2").attr("result","bb");
+
+  strongGlow.append("feMerge").selectAll("feMergeNode").data(["bb","SourceGraphic"]).enter().append("feMergeNode").attr("in",d=>d);
+  function addRadialGradient(id,c0,c1,c2){
+
+    const g=defs.append("radialGradient").attr("id",id).attr("cx","35%").attr("cy","35%");
+
+    g.append("stop").attr("offset","0%").attr("stop-color",c0).attr("stop-opacity","0.98");
+
+    g.append("stop").attr("offset","65%").attr("stop-color",c1).attr("stop-opacity","0.92");
+
+    g.append("stop").attr("offset","100%").attr("stop-color",c2).attr("stop-opacity","0.80");
+
+  }
+  addRadialGradient("gradUp","#70ffb8","#38c68c","#0c4234");
+
+  addRadialGradient("gradDown","#ff5d7a","#cd3e6a","#440c22");
+
+  addRadialGradient("gradFlat","#66e3ff","#489bec","#0e2c56");
+  const {w,h}=getSvgSize(els.mapSvg);
+
+  projection=d3.geoNaturalEarth1().fitExtent([[12,8],[w-12,h-12]],{type:"FeatureCollection",features:geoCountries});
+
+  geoPath=d3.geoPath(projection);
+  rootG=els.mapSvg.append("g");
+
+  countriesG=rootG.append("g").attr("class","countries");
+
+  eventsG=rootG.append("g").attr("class","events");
+
+  growthG=rootG.append("g").attr("class","growth");
+  countriesG.selectAll("path").data(geoCountries,d=>d.properties.name).join("path")
+
+    .attr("class","country")
+
+    .attr("d",geoPath)
+
+    .on("mousemove",(event,d)=>showTooltip(countryTooltipHtml(d.properties.name),event.clientX,event.clientY))
+
+    .on("mouseover",(event,d)=>{d3.select(event.currentTarget).raise();showTooltip(countryTooltipHtml(d.properties.name),event.clientX,event.clientY)})
+
+    .on("mouseout",hideTooltip)
+
+    .on("click",(event,d)=>{const name=d.properties.name;setSelectedCountry(state.selectedCountry===name?null:name)});
+  updateMap();
+
+}
+function updateMap(){
+
+  if(!countriesG)return;
+  const year=state.year;
+
+  const metric=state.metric; /* FIX: в growth тоже используем выбранную метрику */
+  const dom=computeMapDomain(year,metric);
+
+  mapColor.domain([dom.minT,dom.maxT]);
+  els.legendTitle.textContent=`Интенсивность: ${metricLabel(metric)} · ${state.scale==="normalized"?"норм.":"абс."}`;
+
+  els.legendMin.textContent="0";
+
+  els.legendMax.textContent=state.scale==="normalized" ? "5" : (metric==="investments"?formatMoney(dom.maxRaw):d3.format(".2s")(dom.maxRaw));
+  const yearMap=activityIndex.get(year)||new Map();
+  countriesG.selectAll("path.country")
+
+    .attr("fill",d=>{
+
+      const name=d.properties.name;
+
+      const row=yearMap.get(name);
+
+      const raw=row?getMetricValue(row,metric):0;
+
+      const rawClamped=(state.scale==="normalized")?Math.max(0,Math.min(5,raw)):Math.max(0,raw);
+
+      const t=mapTransform(rawClamped,metric);
+
+      return rawClamped<=0?"rgba(26,42,74,.55)":mapColor(t);
+
+    })
+
+    .classed("selected",d=>state.selectedCountry===d.properties.name);
+  updateEventsLayer();
+
+  updateGrowthLayer();
+  if(eventsG)eventsG.raise();
+
+  if(growthG)growthG.raise();
+
+}
+function eventColor(type){
+
+  if(type==="investment")return"rgba(255, 198, 92, .96)";
+
+  if(type==="policy")return"rgba(170, 122, 255, .96)";
+
+  if(type==="clinical")return"rgba(255, 146, 86, .96)";
+
+  if(type==="company")return"rgba(112, 255, 184, .95)";
+
+  return"rgba(102, 227, 255, .96)";
+
+}
+function updateEventLabelBg(groupSel){
+
+  groupSel.each(function(){
+
+    const g=d3.select(this);
+
+    const text=g.select("text.eventLabel");
+
+    if(text.empty())return;
+
+    const node=text.node();
+
+    if(!node)return;
+
+    const bb=node.getBBox();
+
+    const padX=7,padY=4;
+
+    let rect=g.select("rect.eventLabelBg");
+
+    if(rect.empty()){rect=g.insert("rect","text").attr("class","eventLabelBg").attr("rx",9).attr("ry",9)}
+
+    rect.attr("x",bb.x-padX).attr("y",bb.y-padY).attr("width",bb.width+padX*2).attr("height",bb.height+padY*2);
+
+  });
+
+}
+function updateEventsLayer(){
+
+  if(!eventsG||!projection)return;
+
+  if(state.mode==="growth"){eventsG.selectAll("*").remove();return}
+  const y=state.year;
+
+  const filtered=EVENTS_DATA
+
+    .filter(e=>+e.year===y)
+
+    .filter(e=>state.selectedCountry?(e.country===state.selectedCountry):true);
+  const sel=eventsG.selectAll("g.eventItem").data(filtered,d=>d.id);
+
+  sel.exit().transition().duration(180).ease(d3.easeCubicIn).style("opacity",0).remove();
+  const enter=sel.enter().append("g")
+
+    .attr("class","eventItem")
+
+    .attr("transform",d=>{const p=projection([+d.lon,+d.lat]);return`translate(${p[0]},${p[1]})`})
+
+    .style("opacity",0);
+  enter.append("circle").attr("class","eventHalo").attr("r",0).attr("stroke",d=>eventColor(d.type));
+
+  enter.append("circle").attr("class","eventDot").attr("r",0).attr("fill",d=>eventColor(d.type));
+
+  enter.append("text").attr("class","eventLabel").attr("x",12).attr("y",4).text(d=>d.note);
+  enter.on("mousemove",(event,d)=>{
+
+    const html=[
+
+      `<div class="tTitle">${d.note}</div>`,
+
+      `<div class="row"><span>Год</span><span>${d.year}</span></div>`,
+
+      `<div class="row"><span>Страна</span><span>${d.country}</span></div>`,
+
+      `<div class="row"><span>Тип</span><span>${d.type}</span></div>`,
+
+      `<div class="row"><span>Событие</span><span>${d.title}</span></div>`
+
+    ].join("");
+
+    showTooltip(html,event.clientX,event.clientY);
+
+  }).on("mouseout",hideTooltip)
+
+    .on("click",(event,d)=>{setSelectedCountry(state.selectedCountry===d.country?null:d.country);event.stopPropagation()});
+  const merged=enter.merge(sel)
+
+    .attr("transform",d=>{const p=projection([+d.lon,+d.lat]);return`translate(${p[0]},${p[1]})`});
+  merged.transition().duration(260).ease(d3.easeCubicOut).style("opacity",1);
+
+  merged.select("circle.eventDot").transition().duration(420).ease(d3.easeBackOut).attr("r",5.6).attr("fill",d=>eventColor(d.type));
+
+  merged.select("circle.eventHalo").transition().duration(520).ease(d3.easeCubicOut).attr("r",12.5).attr("stroke",d=>eventColor(d.type));
+  requestAnimationFrame(()=>updateEventLabelBg(merged));
+
+}
+function anchorForCountry(country){
+
+  const f=geoCountries.find(ff=>ff.properties&&ff.properties.name===country);
+
+  if(f&&geoPath){
+
+    const c=geoPath.centroid(f);
+
+    if(c&&Number.isFinite(c[0])&&Number.isFinite(c[1]))return c;
+
+  }
+
+  const lonlat=COUNTRY_COORDS[country];
+
+  if(lonlat&&projection){
+
+    const p=projection(lonlat);
+
+    if(p&&Number.isFinite(p[0])&&Number.isFinite(p[1]))return p;
+
+  }
+
+  const ev=EVENTS_DATA.find(e=>e.country===country);
+
+  if(ev&&projection){
+
+    const p=projection([+ev.lon,+ev.lat]);
+
+    if(p&&Number.isFinite(p[0])&&Number.isFinite(p[1]))return p;
+
+  }
+
+  return null;
+
+}
+function updateGrowthLayer(){
+
+  if(!growthG||!projection)return;
+
+  if(state.mode!=="growth"){growthG.selectAll("*").remove();return}
+  const {w,h}=getSvgSize(els.mapSvg);
+
+  const year=state.year;
+
+  const metric=state.metric; /* FIX: рост/топ/пузыри по выбранной метрике */
+  const yMap=activityIndex.get(year)||new Map();
+
+  const prevMap=activityIndex.get(year-1)||new Map();
+  const candidates=Array.from(yMap.values())
+
+    .map(r=>({country:r.country,value:getMetricValue(r,metric)}))
+
+    .sort((a,b)=>d3.descending(a.value,b.value));
+  const bubbles0=[];
+
+  for(let i=0;i<candidates.length && bubbles0.length<10;i++){
+
+    const c=candidates[i];
+
+    const pos=anchorForCountry(c.country);
+
+    if(!pos)continue;
+
+    const prevRow=prevMap.get(c.country);
+
+    const prevV=prevRow?getMetricValue(prevRow,metric):c.value;
+
+    bubbles0.push({
+
+      rank:bubbles0.length+1,
+
+      country:c.country,
+
+      value:c.value,
+
+      prev:prevV,
+
+      delta:c.value-prevV,
+
+      x0:pos[0],y0:pos[1]
+
+    });
+
+  }
+  if(bubbles0.length===0){
+
+    console.warn("[growth] Нет пузырей: проверьте COUNTRY_COORDS/названия стран.");
+
+    growthG.selectAll("*").remove();
+
+    return;
+
+  }
+  const tVal=d=>{
+
+    const v=Math.max(0,+d.value||0);
+
+    if(state.scale==="normalized") return mapTransform(Math.min(5,v),metric); /* норм. размеры ограничиваем */
+
+    return mapTransform(v,metric);
+
+  };
+  const tMax=d3.max(bubbles0,tVal)||1;
+
+  const rScale=d3.scaleSqrt().domain([0,tMax]).range([10,30]);
+  const epsPct=.02;
+
+  function trendKey(d){
+
+    const pct=(d.prev>0)?(d.delta/d.prev):0;
+
+    if(pct>epsPct)return"up";
+
+    if(pct<-epsPct)return"down";
+
+    return"flat";
+
+  }
+  function fillFor(d){
+
+    const k=trendKey(d);
+
+    if(k==="up")return"url(#gradUp)";
+
+    if(k==="down")return"url(#gradDown)";
+
+    return"url(#gradFlat)";
+
+  }
+  function strokeFor(d){
+
+    const k=trendKey(d);
+
+    if(k==="up")return"rgba(112,255,184,.98)";
+
+    if(k==="down")return"rgba(255,93,122,.98)";
+
+    return"rgba(102,227,255,.98)";
+
+  }
+  const nodes=bubbles0.map(b=>{
+
+    const r=rScale(tVal(b));
+
+    const prev=growthLayoutCache.get(b.country);
+
+    return {...b,r,x:(prev&&Number.isFinite(prev.x))?prev.x:b.x0,y:(prev&&Number.isFinite(prev.y))?prev.y:b.y0};
+
+  });
+  const padding=8;
+
+  const sim=d3.forceSimulation(nodes)
+
+    .force("x",d3.forceX(d=>d.x0).strength(.38))
+
+    .force("y",d3.forceY(d=>d.y0).strength(.38))
+
+    .force("collide",d3.forceCollide(d=>d.r+padding).iterations(3))
+
+    .stop();
+  for(let i=0;i<80;i++){
+
+    sim.tick();
+
+    for(const n of nodes){
+
+      n.x=Math.max(16+n.r,Math.min(w-16-n.r,n.x));
+
+      n.y=Math.max(16+n.r,Math.min(h-16-n.r,n.y));
+
+    }
+
+  }
+  for(const n of nodes)growthLayoutCache.set(n.country,{x:n.x,y:n.y});
+  const lineSel=growthG.selectAll("line.growthLeader").data(nodes,d=>d.country);
+
+  lineSel.exit().transition().duration(180).style("opacity",0).remove();
+  const lineEnter=lineSel.enter().append("line")
+
+    .attr("class","growthLeader")
+
+    .attr("x1",d=>d.x0).attr("y1",d=>d.y0)
+
+    .attr("x2",d=>d.x0).attr("y2",d=>d.y0)
+
+    .style("opacity",0);
+  lineEnter.merge(lineSel)
+
+    .transition().duration(260).ease(d3.easeCubicOut)
+
+    .style("opacity",1)
+
+    .attr("x1",d=>d.x0).attr("y1",d=>d.y0)
+
+    .attr("x2",d=>d.x).attr("y2",d=>d.y);
+  const bubSel=growthG.selectAll("g.growthBubble").data(nodes,d=>d.country);
+
+  bubSel.exit().transition().duration(180).ease(d3.easeCubicIn).style("opacity",0).remove();
+  const enter=bubSel.enter().append("g")
+
+    .attr("class","growthBubble")
+
+    .attr("transform",d=>`translate(${d.x0},${d.y0})`)
+
+    .style("opacity",0);
+  enter.append("circle")
+
+    .attr("class","growthCircle")
+
+    .attr("r",0)
+
+    .attr("fill",d=>fillFor(d))
+
+    .attr("stroke",d=>strokeFor(d))
+
+    .attr("filter","url(#strongGlow)");
+  enter.append("text")
+
+    .attr("class","growthRank")
+
+    .attr("text-anchor","middle")
+
+    .attr("dy",".35em")
+
+    .text(d=>d.rank)
+
+    .style("opacity",0);
+  enter.on("mousemove",(event,d)=>{
+
+    const pct=(d.prev>0)?(d.delta/d.prev):null;
+
+    const pctStr=(pct==null)?"—":((pct>=0?"+":"")+(pct*100).toFixed(1)+"%");
+    const valStr=formatValueFor(metric,d.value);
+
+    const prevStr=formatValueFor(metric,d.prev);
+
+    const dStr=formatDeltaFor(metric,d.delta);
+    const html=[
+
+      `<div class="tTitle">Top-${d.rank}: ${d.country}</div>`,
+
+      `<div class="row"><span>Год</span><span>${year}</span></div>`,
+
+      `<div class="row"><span>${metricLabel(metric)} (${state.scale==="normalized"?"норм.":"абс."})</span><span>${valStr}</span></div>`,
+
+      `<div class="row"><span>Прошлый год</span><span>${prevStr}</span></div>`,
+
+      `<div class="row"><span>Δ год-к-году</span><span>${dStr} (${pctStr})</span></div>`,
+
+      `<div class="row"><span>Тренд</span><span>${trendKey(d)==="up"?"рост":(trendKey(d)==="down"?"падение":"без изменений")}</span></div>`
+
+    ].join("");
+    showTooltip(html,event.clientX,event.clientY);
+
+  }).on("mouseout",hideTooltip)
+
+    .on("click",(event,d)=>{setSelectedCountry(state.selectedCountry===d.country?null:d.country);event.stopPropagation()});
+  const merged=enter.merge(bubSel);
+  merged.transition().duration(260).ease(d3.easeCubicOut)
+
+    .style("opacity",1)
+
+    .attr("transform",d=>`translate(${d.x},${d.y})`);
+  merged.select("circle.growthCircle")
+
+    .transition().duration(520).ease(d3.easeBackOut)
+
+    .attr("r",d=>d.r)
+
+    .attr("fill",d=>fillFor(d))
+
+    .attr("stroke",d=>strokeFor(d));
+  merged.select("text.growthRank")
+
+    .text(d=>d.rank)
+
+    .transition().delay(120).duration(240).ease(d3.easeCubicOut)
+
+    .style("opacity",1);
+  growthG.selectAll("line.growthLeader").lower();
+
+}
+/* ===================== CHART ===================== */
+function initChart(){updateChart()}
+function tickFormatFor(metric,v){
+
+  if(state.scale==="normalized")return d3.format(".0f")(v);
+
+  if(metric==="investments")return formatMoney(v);
+
+  if(metric==="composite")return d3.format(".2s")(v);
+
+  return d3.format(".2s")(v);
+
+}
+function updateChart(){
+
+  els.chartSvg.selectAll("*").remove();
+  const node=els.chartSvg.node();
+
+  const rect=node.getBoundingClientRect();
+
+  const w=Math.max(320,rect.width);
+
+  const h=Math.max(240,rect.height);
+
+  const margin={top:30,right:12,bottom:14,left:120};
+
+  const barH=Math.floor(h*.60);
+  const year=state.year;
+
+  const metric=state.metric; /* FIX: в growth тоже выбранная метрика */
+  const yMap=activityIndex.get(year)||new Map();
+
+  const rows=Array.from(yMap.values())
+
+    .map(r=>({country:r.country,value:getMetricValue(r,metric)}))
+
+    .sort((a,b)=>d3.descending(a.value,b.value))
+
+    .slice(0,10);
+  const g=els.chartSvg.append("g");
+  let xBar=null,xMax=1;
+
+  if(state.scale==="normalized"){
+
+    xMax=5;
+
+    xBar=d3.scaleLinear().domain([0,5]).range([margin.left,w-margin.right]);
+
+  }else{
+
+    xMax=d3.max(rows,d=>d.value)||1;
+
+    xBar=d3.scaleLinear().domain([0,xMax]).nice().range([margin.left,w-margin.right]);
+
+  }
+  const yBar=d3.scaleBand().domain(rows.map(d=>d.country)).range([margin.top,barH-30]).padding(.12);
+  g.selectAll("rect.bar").data(rows,d=>d.country).join("rect")
+
+    .attr("class",d=>"bar"+(state.selectedCountry===d.country?" selected":""))
+
+    .attr("x",xBar(0))
+
+    .attr("y",d=>yBar(d.country))
+
+    .attr("height",yBar.bandwidth())
+
+    .attr("width",d=>{
+
+      const v=(state.scale==="normalized")?Math.max(0,Math.min(5,d.value)):Math.max(0,d.value);
+
+      return Math.max(0,xBar(v)-xBar(0));
+
+    })
+
+    .on("click",(event,d)=>setSelectedCountry(state.selectedCountry===d.country?null:d.country));
+  g.selectAll("text.barValue").data(rows,d=>d.country).join("text")
+
+    .attr("class","barValue")
+
+    .attr("x",d=>{
+
+      const v=(state.scale==="normalized")?Math.max(0,Math.min(5,d.value)):Math.max(0,d.value);
+
+      return xBar(v)+6;
+
+    })
+
+    .attr("y",d=>(yBar(d.country)??0)+yBar.bandwidth()/2+3.5)
+
+    .text(d=>{
+
+      if(state.scale==="normalized")return d.value>5?"5+":d.value.toFixed(2);
+
+      if(metric==="investments")return formatMoney(d.value);
+
+      if(metric==="composite")return d3.format(".2s")(d.value);
+
+      return d3.format(".2s")(d.value);
+
+    });
+  g.append("g").attr("class","axis")
+
+    .attr("transform",`translate(${margin.left},0)`)
+
+    .call(d3.axisLeft(yBar).tickSize(0))
+
+    .call(gg=>gg.select(".domain").remove());
+  const xTicks=(state.scale==="normalized")?[0,1,2,3,4,5]:4;
+
+  g.append("g").attr("class","axis")
+
+    .attr("transform",`translate(0,${barH-30})`)
+
+    .call(d3.axisBottom(xBar).ticks(xTicks).tickFormat(v=>tickFormatFor(metric,v)));
+  g.append("text")
+
+    .attr("x",margin.left)
+
+    .attr("y",margin.top-12)
+
+    .attr("fill","rgba(230,238,252,.85)")
+
+    .attr("font-size",11)
+
+    .attr("font-weight",900)
+
+    .text(`Top-10 стран за ${year}: ${metricLabel(metric)} · ${state.scale==="normalized"?"норм.":"абс."}`);
+  const series=[];
+
+  if(state.selectedCountry){
+
+    for(const yy of YEARS){
+
+      const rr=(activityIndex.get(yy)||new Map()).get(state.selectedCountry);
+
+      const vv=getMetricValue(rr,metric);
+
+      series.push({year:yy,value:(state.scale==="normalized")?clampNormValue(metric,vv):vv});
+
+    }
+
+  }else{
+
+    for(const yy of YEARS){
+
+      const vv=getWorldMetricValue(yy,metric);
+
+      series.push({year:yy,value:(state.scale==="normalized")?clampNormValue(metric,vv):vv});
+
+    }
+
+  }
+  const lineMargin={top:barH+12,right:12,bottom:22,left:54};
+
+  const xLine=d3.scaleLinear().domain([2010,2024]).range([lineMargin.left,w-lineMargin.right]);
+  let yLine=null;
+
+  if(state.scale==="normalized"){
+
+    yLine=d3.scaleLinear().domain([0,5]).range([h-lineMargin.bottom,lineMargin.top]);
+
+  }else{
+
+    const ymax=d3.max(series,d=>d.value)||1;
+
+    yLine=d3.scaleLinear().domain([0,ymax]).nice().range([h-lineMargin.bottom,lineMargin.top]);
+
+  }
+  g.append("g").attr("class","gridline")
+
+    .attr("transform",`translate(${lineMargin.left},0)`)
+
+    .call(d3.axisLeft(yLine).ticks(state.scale==="normalized"?6:4).tickSize(-(w-lineMargin.left-lineMargin.right)).tickFormat(""))
+
+    .call(gg=>gg.select(".domain").remove());
+  g.append("g").attr("class","axis")
+
+    .attr("transform",`translate(0,${h-lineMargin.bottom})`)
+
+    .call(d3.axisBottom(xLine).ticks(6).tickFormat(d3.format("d")));
+  g.append("g").attr("class","axis")
+
+    .attr("transform",`translate(${lineMargin.left},0)`)
+
+    .call(d3.axisLeft(yLine).ticks(state.scale==="normalized"?6:4).tickFormat(v=>tickFormatFor(metric,v)));
+  const line=d3.line()
+
+    .x(d=>xLine(d.year))
+
+    .y(d=>yLine(d.value))
+
+    .curve(d3.curveMonotoneX);
+  g.append("path").datum(series).attr("class","line").attr("d",line);
+  g.append("line").attr("class","yearMarker")
+
+    .attr("x1",xLine(year)).attr("x2",xLine(year))
+
+    .attr("y1",lineMargin.top).attr("y2",h-lineMargin.bottom);
+  g.selectAll("circle.dot").data(series,d=>d.year).join("circle")
+
+    .attr("class","dot")
+
+    .attr("r",d=>d.year===year?4.5:3)
+
+    .attr("cx",d=>xLine(d.year))
+
+    .attr("cy",d=>yLine(d.value));
+  g.append("text")
+
+    .attr("x",lineMargin.left)
+
+    .attr("y",lineMargin.top-4)
+
+    .attr("fill","rgba(230,238,252,.85)")
+
+    .attr("font-size",11)
+
+    .attr("font-weight",900)
+
+    .text(state.selectedCountry?`Динамика: ${state.selectedCountry} (2010–2024)`:`Динамика: мир total (2010–2024)`);
+
+}
+/* ===================== STATE SETTERS ===================== */
+function setYear(y){
+
+  state.year=clampYear(y);
+
+  els.yearSlider.value=String(state.year);
+
+  els.yearBadge.textContent=String(state.year);
+
+  updateMap();updateChart();
+
+}
+function setMetric(m){
+
+  state.metric=m;
+
+  /* сброс кэша раскладки пузырей — чтобы при смене метрики не “тащить” старую геометрию */
+
+  growthLayoutCache=new Map();
+
+  updateMap();updateChart();
+
+}
+function setScale(s){
+
+  state.scale=s;
+
+  growthLayoutCache=new Map();
+
+  updateMap();updateChart();
+
+}
+function setMode(mode){
+
+  state.mode=mode;
+
+  hideTooltip();
+
+  growthLayoutCache=new Map();
+
+  updateMap();updateChart();
+
+}
+function setSelectedCountry(nameOrNull){
+
+  state.selectedCountry=nameOrNull;
+
+  hideTooltip();
+
+  updateMap();updateChart();
+
+}
+function setSpeed(ms){
+
+  state.playMs=Math.max(100,+ms||900);
+
+  if(state.playing){setPlaying(false);setPlaying(true)}
+
+}
+function setPlaying(on){
+
+  state.playing=!!on;
+
+  els.btnPlay.textContent=state.playing?"⏸":"▶︎";
+
+  if(playTimer){clearInterval(playTimer);playTimer=null}
+
+  if(state.playing){
+
+    playTimer=setInterval(()=>{
+
+      const next=(state.year>=2024)?2010:(state.year+1);
+
+      setYear(next);
+
+    },state.playMs);
+
+  }
+
+}
+function bindUI(){
+
+  els.metricSelect.addEventListener("change",e=>setMetric(e.target.value));
+
+  els.scaleSelect.addEventListener("change",e=>setScale(e.target.value));
+
+  els.modeSelect.addEventListener("change",e=>setMode(e.target.value));
+
+  els.speedSelect.addEventListener("change",e=>setSpeed(e.target.value));
+
+  els.yearSlider.addEventListener("input",e=>setYear(e.target.value));
+
+  els.btnPrev.addEventListener("click",()=>setYear(state.year-1));
+
+  els.btnNext.addEventListener("click",()=>setYear(state.year+1));
+
+  els.btnPlay.addEventListener("click",()=>setPlaying(!state.playing));
+
+  els.btnClear.addEventListener("click",()=>setSelectedCountry(null));
+  window.addEventListener("resize",()=>{
+
+    if(geoCountries.length){initMap();initChart()}
+
+    else{initChart()}
+
+  });
+
+}
+async function boot(){
+
+  bindUI();
+  els.metricSelect.value=state.metric;
+
+  els.scaleSelect.value=state.scale;
+
+  els.modeSelect.value=state.mode;
+
+  els.speedSelect.value=String(state.playMs);
+
+  els.yearSlider.value=String(state.year);
+
+  els.yearBadge.textContent=String(state.year);
+  initChart();
+  try{
+
+    geoCountries=await loadWorldGeoCountries();
+
+    els.mapStatus.style.display="none";
+
+    initMap();
+
+  }catch(err){
+
+    console.error(err);
+
+    els.mapStatus.innerHTML="<strong>Не удалось загрузить геоданные карты.</strong><br/>Откройте файл через локальный сервер (например, <strong>python -m http.server</strong>) и обновите страницу.";
+
+  }
+
+}
+boot().catch(err=>{
+
+  console.error(err);
+
+  alert("Ошибка инициализации. Откройте консоль (F12) для деталей.");
+
+});
+})();
+
+</script>
+
+</body>
+
+</html>
